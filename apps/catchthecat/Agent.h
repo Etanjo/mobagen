@@ -27,8 +27,10 @@ public:
   virtual ~Agent() = default;
 
   virtual Point2D Move(CatWorld*) = 0;
-
+  std::vector<Point2D> getVisitableNeighbors(CatWorld* w, Point2D* p);
   std::vector<Point2D> generatePath(CatWorld* w);
+  bool isVisitable(CatWorld*, Point2D p);
+  bool isBorder(CatWorld*, Point2D p);
 };
 
 #endif  // AGENT_H
