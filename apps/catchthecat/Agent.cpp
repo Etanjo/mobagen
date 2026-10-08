@@ -1,6 +1,7 @@
 #include "Agent.h"
 #include <climits>
 #include <queue>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include "World.h"
@@ -19,7 +20,7 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w) {
   frontierSet.insert(catPos);
   Point2D borderExit = {INT32_MAX, INT32_MAX};  // sentinel: no border found yet
 
-  while (!frontier.empty()) {
+  while (!frontier.empty() && borderExit == Point2D{INT32_MAX,INT32_MAX}) {
     // get the current from frontier
     Point2D current = frontier.front();
     // remove the current from frontierset
@@ -29,6 +30,20 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w) {
     // getVisitableNeightbors(world, current) returns a vector of neighbors that are not visited, not cat, not block, not in the queue
     std::vector<Point2D> neighbors = getVisitableNeighbors(w, &current);
     // iterate over the neighs:
+    for (Point2D n : neighbors )
+    {
+      if (!cameFrom.contains(n)) 
+      {
+        cameFrom[n] = current;
+        frontier.push(n);
+        if (isBorder(w,n))
+        {
+          borderExit = n;
+          break;
+        
+        }
+      }
+    }
     // for every neighbor set the cameFrom
     // enqueue the neighbors to frontier and frontierset
     // do this up to find a visitable border and break the loop
@@ -37,7 +52,21 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w) {
   // if the border is not infinity, build the path from border to the cat using the camefrom map
   // if there isnt a reachable border, just return empty vector
   // if your vector is filled from the border to the cat, the first element is the catcher move, and the last element is the cat move
-  return vector<Point2D>();
+  if (borderExit == Point2D{INT32_MAX, INT32_MAX}) 
+  {
+    return vector<Point2D>();
+  } else 
+  {
+    Point2D pathCurrent = borderExit;
+    vector<Point2D> path;
+    
+    while (cameFrom.contains(pathCurrent))
+    {
+      path.push_back(pathCurrent);
+      pathCurrent = cameFrom[pathCurrent];
+    }
+    return path;
+  }
 }
 
 std ::vector<Point2D> Agent::getVisitableNeighbors(CatWorld* w, Point2D* p) 
